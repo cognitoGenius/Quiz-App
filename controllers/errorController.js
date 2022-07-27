@@ -1,9 +1,9 @@
 //I have to implement error handling for both Operational and programming errors and also for
 // uncaught excxeptions - unknown regular errors
+//and for unhandled rejections - This are unknown errors from async functions
 
 const SpecialError = require("../Utils/specialError");
 
-//and for unhandled rejections - This are unknown errors from async functions
 
 const handleCastErrorDB = (error) => {
     const message = `Invalid ${error.path} : ${error.value}`
@@ -29,10 +29,7 @@ const handleValidationErrorDB = (error) => {
 
 
 
-
-
-
-
+//Function to send error to me during development
 const sendErrorDev = (err, res) => {
     res.status(err.statusCode).json({
         status: err.status,
@@ -41,6 +38,8 @@ const sendErrorDev = (err, res) => {
         stack: err.stack
     });
 };
+
+//Function to send limited error to client during production
 const sendErrorProd = (err, res) => {
     // Operational, trusted error: send message to client
     if (err.isOperational) {
@@ -65,7 +64,7 @@ const sendErrorProd = (err, res) => {
 };
 
 
-
+//Express error handler for handling errors during development and production
 module.exports = (err, req, res, next) => {
     err.statusCode = err.statusCode || 500;
     err.status = err.status || 'error';

@@ -11,8 +11,8 @@ const {
 
 const router = express.Router();
 
-// router.post('/signup', authController.signUp);// These will be implemented later
-// router.post('/login', authController.login); //These will be implemented later too
+router.post('/signup', authController.signup);
+router.post('/login', authController.login);
 
 
 // router.post('/forgotPassword', authController.forgotPassword); //Will be implemented later

@@ -18,6 +18,9 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
 
 
 exports.createUser = catchAsync(async (req, res, error) => {
+
+
+
     res.status(500).json({
         status: `error`,
         message: `This route is not yet defined`

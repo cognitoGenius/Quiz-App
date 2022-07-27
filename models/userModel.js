@@ -1,6 +1,7 @@
 const mongoose = require(`mongoose`);
 const validator = require('validator');
 const resultSchema = require('./resultModel')
+const bcrypt = require('bcryptjs')
 
 
 //Describe a schema and some validation
@@ -31,10 +32,17 @@ const userSchema = new mongoose.Schema({
         lowercase: true,
         validate: [validator.isEmail, 'Enter a valid email address']
     },
+    role: {
+        type: String,
+        enum: ['user', 'admin'],
+        required: [true, 'User role needs to be defined'],
+        default: 'user',
+    },
     password: {
         type: String,
         required: [true, 'Insert Option'],
-        minLength: [8, 'Password must contain atleast 8 characters']
+        minLength: [8, 'Password must contain atleast 8 characters'],
+        select: false,
     },
     passwordConfirm: {
         type: String,
@@ -61,15 +69,20 @@ const userSchema = new mongoose.Schema({
 })
 
 
-//I am considering using this prehook to validate that the number of results stored is not more than the most recent 20
+userSchema.pre('save', async function (next) {
+    //To ensure that encryption of the password is only done when there is a change in the password field.
+    if (!this.isModified('password')) return next()
+    //Encrypt the password
+    this.password = await bcrypt.hash(this.password, 12)
+    //Remove the password confirm field so as not to persist it since it has no use anymore
+    this.passwordConfirm = undefined
+})
 
-// userSchema.pre('save', function (next) {
-//     if (this.scoreHistory.length === 20) {
-//         this.scoreHistory.length.shift()
-//     }
-// })
+userSchema.methods.correctPassword = async function (candidatePassword, userPassword) {
+    return await bcrypt.compare(candidatePassword, userPassword);
+}
 
-
+//Remember to check that the user history does not exit a length of 20
 
 
 //Creates a model
