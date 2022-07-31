@@ -9,7 +9,7 @@ dotenv.config({
 process.on('uncaughtException', error => {
     // console.log(error.name, error.message, '🤦‍♂️')
     process.exit(1)
-})
+});
 
 
 const app = require('./app')

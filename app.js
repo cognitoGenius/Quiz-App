@@ -1,6 +1,7 @@
 const express = require('express');
 const morgan = require('morgan');
 
+const authController = require('./controllers/authController');
 const SpecialError = require('./Utils/specialError');
 const globalErrorHandler = require('./controllers/errorController');
 const userRouter = require('./routes/userRoutes');
@@ -15,6 +16,11 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 app.use(express.json()) //To make the body property available on the request object to facilitate post requests
+
+app.use((req, res, next) => {
+    console.log(req.headers);
+    next();
+})
 
 
 app.use('/api/v1/users', userRouter) //This route has to be accessed by a currently logged in user
