@@ -11,30 +11,14 @@ const questionSchema = new mongoose.Schema({
         type: String,
         unique: true,
         required: [true, `There must be a valid question`],
-
     },
-    A: {
-        type: String,
-        required: [true, 'Insert Option'],
-
-    },
-    B: {
-        type: String,
-        required: [true, 'Insert Option'],
-    },
-    C: {
-        type: String,
-        required: [true, 'Insert Option'],
-    },
-    D: {
-        type: String,
-        required: [true, 'Insert Option'],
-    },
-    correctAnswer: {
-        type: String,
-        enum: ['A', 'B', 'C', 'D'],
-        required: [true, 'Which Option is the correct option']
-    },
+    answers: [{
+        ans1: {
+            type: String,
+            unique: true,
+            required: [true, 'add an option']
+        }
+    }],
     randomQueryNumber: {
         type: Number
     },

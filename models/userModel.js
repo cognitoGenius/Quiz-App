@@ -1,6 +1,5 @@
 const mongoose = require(`mongoose`);
 const validator = require('validator');
-const resultSchema = require('./resultModel')
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
@@ -61,15 +60,34 @@ const userSchema = new mongoose.Schema({
         default: Date.now()
     },
 
-    scoreHistory: {
-        type: [resultSchema],
-    },
+    resultHistory: [{
+        subjects: {
+            type: [String],
+            required: [true, 'The user must have taken a test on atleast one subject'],
+        },
+        scorePercent: {
+            type: Number,
+            required: [true, 'The user must have a score']
+        },
+        noOfQuestions: {
+            type: Number,
+            required: [true, 'How many questions did the user take?']
+        },
+        mode: {
+            type: String,
+            enum: ['Practice', 'Test'],
+            required: [true, 'what type of test was it?']
+        },
+        dateTaken: {
+            type: Date,
+            default: Date.now()
+        },
+    }],
+    testsTaken: Number,
+    highestTestPercent: Number,
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
-
-    //There should be a field that shows the total number of tests taken and one that...
-    //...stores the highest test percentage accrued by that particular user
 })
 
 
@@ -80,21 +98,12 @@ userSchema.pre('save', async function (next) {
     this.password = await bcrypt.hash(this.password, 12)
     //Remove the password confirm field so as not to persist it since it has no use anymore
     this.passwordConfirm = undefined
-    next()
 });
 
-userSchema.pre('save', async function (next) {
-    //Check for the password being modified and ensure the document is not new before...
-    //...setting the passwordChangedAt field
-    if (!this.isModified('password') || this.isNew) return next();
-
-    this.passwordChangedAt = Date.now() + 1000; //To ensure that hashing takes place before this is done
-})
 
 userSchema.methods.correctPassword = async function (candidatePassword, userPassword) {
     return await bcrypt.compare(candidatePassword, userPassword);
 };
-
 
 
 userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
@@ -113,10 +122,8 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
 
 userSchema.methods.createPasswordResetToken = function () {
     const resetToken = crypto.randomBytes(32).toString('hex');
-
     this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
     this.passwordResetExpires = (Date.now() + 10 * 60 * 100);
-
 
     return resetToken;
 };

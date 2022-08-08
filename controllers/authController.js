@@ -6,7 +6,6 @@ const User = require('./../models/userModel');
 const SpecialError = require('./../Utils/specialError');
 const catchAsync = require('./../Utils/catchAsync');
 const sendEmail = require('./../Utils/email');
-const crypto = require('crypto');
 
 
 const signToken = id => jwt.sign({
@@ -14,21 +13,6 @@ const signToken = id => jwt.sign({
 }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN
 });
-
-//To refactor the process of sending some responses
-const createResponse = (user, statusCode, res) => {
-    const token = signToken(user._id);
-
-    user.password = undefined; //To ensure password data is not leaked in the response
-
-    res.status(statusCode).json({
-        status: 'success',
-        token,
-        data: {
-            user
-        }
-    });
-};
 
 exports.signup = catchAsync(async (req, res, next) => {
     const newUser = await User.create({
@@ -39,9 +23,17 @@ exports.signup = catchAsync(async (req, res, next) => {
         password: req.body.password,
         passwordConfirm: req.body.passwordConfirm,
         passwordChangedAt: req.body.passwordChangedAt,
-    });
+    })
 
-    createResponse(newUser, 201, res)
+    const token = signToken(newUser._id);
+
+    res.status(201).json({
+        status: 'success',
+        token,
+        data: {
+            user: newUser
+        }
+    })
 });
 
 
@@ -59,7 +51,12 @@ exports.login = catchAsync(async (req, res, next) => {
     // console.log(user)
 
     if (!user || !(await user.correctPassword(password, user.password))) return next(new SpecialError('email or password incorrect', 401))
-    createResponse(user, 200, res);
+    const token = signToken(user._id);
+
+    res.status(200).json({
+        status: 'success',
+        token
+    })
 });
 
 
@@ -90,21 +87,23 @@ exports.protect = catchAsync(async (req, res, next) => {
     }
 
     //Grant access to the protected route
-    req.user = currentUser; //Add the current user to the request object for use later.
+    req.user = currentUser; //Add the current user to the request object as it may become useful later.
     next()
 });
 
-exports.restrictTo = (...roles) => {
-    //Closure in play here
-    return (req, res, next) => {
-        console.log(req.user.role, roles, req.user)
-        if (!roles.includes(req.user.role)) {
-            return next(new SpecialError('You do not have permission to perform this action', 401));
-        }
-        next()
-    }
+//I am thinking of removing user roles from this project
 
-};
+// exports.restrictTo = (...roles) => {
+//     //Closure in play here
+//     return (req, res, next) => {
+//         console.log(req.user.role, roles, req.user)
+//         if (!roles.includes(req.user.role)) {
+//             return next(new SpecialError('You do not have permission to perform this action', 401));
+//         }
+//         next()
+//     }
+
+// };
 
 
 exports.forgotPassword = catchAsync(async (req, res, next) => {
@@ -149,46 +148,5 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
 
 exports.resetPassword = catchAsync(async (req, res, next) => {
-    const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
-    //Get user from hashed token
-    const user = await User.findOne({
-        passwordResetToken: hashedToken,
-        passwordResetExpires: {
-            $gt: Date.now()
-        }
-    });
-    //Return error if user is not found or the token has expired
-    if (!user) {
-        return next(new SpecialError('Token is invalid or has expired', 400))
-    };
 
-    user.password = req.body.password
-    user.passwordConfirm = req.body.passwordConfirm
-    user.passwordResetToken = undefined
-    user.passwordResetExpires = undefined
-
-    await user.save();
-
-    createResponse(user, 200, res);
-});
-
-
-exports.updatePassword = catchAsync(async (req, res, next) => {
-    //Find user by ID
-    const user = await User.findById(req.user.id).select('+password');
-    console.log(user)
-    //Confirm that the user still knows his previous password, return an error if he is wrong
-    if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
-        return next(new SpecialError('Your current password is wrong', 401))
-    };
-
-    //Update the new details
-    user.password = req.body.password;
-    user.passwordConfirm = req.body.passwordConfirm;
-
-    //Save the new details and run validators
-    await user.save();
-
-    //Log user in and send back response
-    createResponse(user, 200, res);
 });
