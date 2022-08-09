@@ -38,7 +38,7 @@ const server = app.listen(port, () => {
 
 //Globally handling unhandled rejections
 process.on('unhandledRejection', error => {
-    // console.log(error.name, error.message)
+    console.log(error.name, error.message)
     server.close(() => {
         //The code '1' passed into the method below indicates an uncaught exception
         process.exit(1)

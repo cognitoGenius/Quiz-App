@@ -14,20 +14,27 @@ const questionSchema = new mongoose.Schema({
     },
     answers: [{
         ans1: {
-            type: String,
-            unique: true,
-            required: [true, 'add an option']
+            option: String,
+            correct: Boolean,
+        },
+        ans2: {
+            option: String,
+            correct: Boolean,
+        },
+        ans3: {
+            option: String,
+            correct: Boolean,
+        },
+        ans4: {
+            option: String,
+            correct: Boolean,
         }
     }],
     randomQueryNumber: {
         type: Number
     },
-    //I need to fund out how I can create a custom property on one of the fields in my schema. 
-    //That will help me selct which option is correct -- I solved this by using the correctAnswer field
+
 })
-
-
-
 
 
 //Creates a model

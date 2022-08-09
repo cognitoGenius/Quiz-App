@@ -4,6 +4,11 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
 
+function cusValidator(val) {
+    return (val <= 100 && val > 0)
+}
+const customVal = [cusValidator, 'The score entered should be between 1 and 100']
+
 //Describe a schema and some validation
 const userSchema = new mongoose.Schema({
     firstName: {
@@ -34,7 +39,10 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['user', 'admin'],
+        enum: {
+            values: ['user', 'admin'],
+            message: '{VALUE} is not supported'
+        },
         required: [true, 'User role needs to be defined'],
         default: 'user',
     },
@@ -49,7 +57,7 @@ const userSchema = new mongoose.Schema({
         required: [true],
         validate: {
             validator: function (element) {
-                //This only works as SAVE. That is it only works on the create or save method
+                //Only works on the create or save method
                 return element === this.password;
             },
             message: 'Passwords are not the same'
@@ -67,7 +75,14 @@ const userSchema = new mongoose.Schema({
         },
         scorePercent: {
             type: Number,
-            required: [true, 'The user must have a score']
+            required: [true, 'The user must have a score'],
+            validate: {
+                validator: function (element) {
+                    //Only works on the create or save method
+                    return element <= 100;
+                },
+                message: 'Score percent should be between 0 and 100'
+            },
         },
         noOfQuestions: {
             type: Number,
@@ -75,7 +90,10 @@ const userSchema = new mongoose.Schema({
         },
         mode: {
             type: String,
-            enum: ['Practice', 'Test'],
+            enum: {
+                values: ['Practice', 'Test'],
+                message: '{VALUE} is not a supported input'
+            },
             required: [true, 'what type of test was it?']
         },
         dateTaken: {
@@ -83,7 +101,10 @@ const userSchema = new mongoose.Schema({
             default: Date.now()
         },
     }],
-    testsTaken: Number,
+    testsTaken: {
+        type: Number,
+        default: 0
+    },
     highestTestPercent: Number,
     passwordChangedAt: Date,
     passwordResetToken: String,
@@ -123,7 +144,7 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
 userSchema.methods.createPasswordResetToken = function () {
     const resetToken = crypto.randomBytes(32).toString('hex');
     this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    this.passwordResetExpires = (Date.now() + 10 * 60 * 100);
+    this.passwordResetExpires = (Date.now() + 10 * 60 * 1000);
 
     return resetToken;
 };
