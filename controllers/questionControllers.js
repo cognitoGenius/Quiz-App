@@ -1,23 +1,57 @@
 const catchAsync = require('./../Utils/catchAsync')
-const Question = require('./../models/questionModel');
+const Questions = require('./../models/questionModel');
 const SpecialError = require('../Utils/specialError');
 
 
-exports.getAllQuestions = catchAsync(async (req, res, next) => {
-    const questions = await Question.find();
+exports.getTestQuestions = catchAsync(async (req, res, next) => {
+    // console.log(req.body.examDetails);
+    const instructions = {};
+    instructions['subjects'] = req.body.examDetails['subjects'];
+    instructions['mode'] = req.body.examDetails['mode'];
+    // console.log(instructions)
+    if (!req.body.examDetails) {
+        return next(new SpecialError('Test details are needed', 400))
+    }
+    const completeTestQuestions = [];
+    for (let each of req.body.examDetails.subjects) {
+        const testQuestions = await Questions.aggregate([{
+                $match: {
+                    subject: {
+                        $eq: each
+                    }
+                }
+            },
+            {
+                $sample: {
+                    size: 3
+                }
+            }
+        ])
+
+        completeTestQuestions.push(testQuestions)
+    }
     console.log("This req was successful")
 
     res.status(200).json({
         status: 'success',
-        data: questions
+        instructions,
+        data: completeTestQuestions
     })
 });
 
 
+exports.createQuestion = catchAsync(async (req, res, next) => {
+    const newQuestion = await Questions.create({
+        subject: req.body.subject,
+        question: req.body.question,
+        answers: req.body.answers
+    });
 
-
-
-
+    res.status(201).json({
+        status: 'success',
+        newQuestion
+    })
+})
 
 
 

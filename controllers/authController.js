@@ -15,6 +15,32 @@ const signToken = id => jwt.sign({
     expiresIn: process.env.JWT_EXPIRES_IN
 });
 
+//Refactored sending jwt and cookie to client and logging user in - also preventing leakage of user data into one function.
+const refactorResponse = (user, statusCode, res) => {
+    const token = signToken(user._id);
+
+    const cookieOptions = {
+        expires: new Date(
+            Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+        ),
+        httpOnly: true
+    };
+    if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+
+    res.cookie('jwt', token, cookieOptions); //Look up this line of code
+
+    user.password = undefined;
+
+    res.status(statusCode).json({
+        status: 'success',
+        token,
+        data: {
+            user
+        }
+    })
+};
+
+
 exports.signup = catchAsync(async (req, res, next) => {
     //Get allowed data from the prospective user
     const newUser = await User.create({
@@ -27,17 +53,8 @@ exports.signup = catchAsync(async (req, res, next) => {
         passwordChangedAt: req.body.passwordChangedAt,
     })
 
-    //jwt token to be sent to the client is created
-    const token = signToken(newUser._id);
-
-    //User data sent and user logged in (by sending the jwtToken) after a successful signup
-    res.status(201).json({
-        status: 'success',
-        token,
-        data: {
-            user: newUser
-        }
-    })
+    //Send jwt to client and log user in
+    refactorResponse(newUser, 201, res);
 });
 
 

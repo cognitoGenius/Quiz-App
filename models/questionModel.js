@@ -9,31 +9,51 @@ const questionSchema = new mongoose.Schema({
     },
     question: {
         type: String,
-        unique: true,
         required: [true, `There must be a valid question`],
+        // unique: true,
     },
     answers: [{
         ans1: {
-            option: String,
-            correct: Boolean,
+            option: {
+                type: String,
+                required: [true, 'Input an option']
+            },
+            correct: {
+                type: Boolean,
+                required: [true, 'Indicate if this option is correct or not']
+            },
         },
         ans2: {
-            option: String,
-            correct: Boolean,
+            option: {
+                type: String,
+                required: [true, 'Input an option']
+            },
+            correct: {
+                type: Boolean,
+                required: [true, 'Indicate if this option is correct or not']
+            },
         },
         ans3: {
-            option: String,
-            correct: Boolean,
+            option: {
+                type: String,
+                required: [true, 'Input an option']
+            },
+            correct: {
+                type: Boolean,
+                required: [true, 'Indicate if this option is correct or not']
+            },
         },
         ans4: {
-            option: String,
-            correct: Boolean,
+            option: {
+                type: String,
+                required: [true, 'Input an option']
+            },
+            correct: {
+                type: Boolean,
+                required: [true, 'Indicate if this option is correct or not']
+            },
         }
-    }],
-    randomQueryNumber: {
-        type: Number
-    },
-
+    }]
 })
 
 
