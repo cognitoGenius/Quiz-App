@@ -5,7 +5,7 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
-
+const cors = require('cors')
 const SpecialError = require('./Utils/specialError');
 const globalErrorHandler = require('./controllers/errorController');
 const userRouter = require('./routes/userRoutes');
@@ -15,6 +15,7 @@ const app = express();
 
 //Setting security headers
 app.use(helmet()); //Recheck why it has to be called
+app.use(cors())
 
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'))
