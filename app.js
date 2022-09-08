@@ -15,7 +15,7 @@ const app = express();
 
 //Setting security headers
 app.use(helmet()); //Recheck why it has to be called
-app.use(cors())
+app.use(cors());
 
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'))
